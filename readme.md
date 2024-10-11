@@ -1,4 +1,4 @@
-# Proyecto Ansible para la Instalación de Ceph (Quincy) en Debian
+# Proyecto Ansible para la Instalación en modo Cluster de Rabbitmq en Debian 12 / Ubuntuassasa
 Esta documentación describe cómo utilizar Ansible para desplegar y configurar un clúster de Ceph en servidores Debian en su versión Quincy. A través de este proyecto, se busca automatizar la instalación de Ceph y sus dependencias, asegurando un despliegue eficiente y repetible.
 
 ## Requisitos Previos
