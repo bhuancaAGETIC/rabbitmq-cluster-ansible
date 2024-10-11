@@ -1,0 +1,30 @@
+---
+- name: Instalar dependencias necesarias
+  apt:
+    name:
+      - curl
+      - software-properties-common
+      - apt-transport-https
+      - lsb-release
+      - ca-certificates
+      - gnupg
+
+- name: Descargar el script de instalación del repositorio Erlang
+  ansible.builtin.get_url:
+    url: "https://dl.cloudsmith.io/public/rabbitmq/rabbitmq-erlang/setup.deb.sh"
+    dest: "/tmp/setup-erlang.sh"
+    mode: '0755'
+
+- name: Ejecutar el script de instalación del repositorio Erlang
+  command: sudo -E bash /tmp/setup-erlang.sh
+
+- name: Actualizar la lista de paquetes
+  apt:
+    update_cache: yes
+
+- name: Instalar Erlang
+  apt:
+    name: erlang
+    state: present
+
+

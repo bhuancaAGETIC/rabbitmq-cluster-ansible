@@ -1,0 +1,13 @@
+---
+- name: Actualizar paquetes del sistema
+  apt:
+    update_cache: yes
+    upgrade: dist
+  become: true  # Asegúrate de ejecutar como sudo
+
+- name: Agregar entradas al archivo /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ item }}"
+    state: present
+  loop: "{{ groups['rabbitmq'] | map('extract', hostvars, 'ansible_host') | zip(groups['rabbitmq']) | map('join', ' ') | list }}"

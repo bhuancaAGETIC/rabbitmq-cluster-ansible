@@ -1,0 +1,32 @@
+---
+- name: Agregar repositorio RabbitMQ
+  become: yes
+  shell: |
+    curl -s https://packagecloud.io/install/repositories/rabbitmq/rabbitmq-server/script.deb.sh | bash
+  args:
+    executable: /bin/bash
+
+- name: Instalar RabbitMQ
+  become: yes
+  apt:
+    name: rabbitmq-server
+    state: present
+
+
+- name: Habilitar servicio RabbitMQ
+  service:
+    name: rabbitmq-server
+    enabled: yes
+    state: started
+
+- name: Habilitar panel de administración de RabbitMQ
+  command: rabbitmq-plugins enable rabbitmq_management
+
+- name: Crear usuario administrador
+  command: rabbitmqctl add_user {{ rabbitmq_admin_user }} {{ rabbitmq_admin_password }}
+  ignore_errors: yes
+
+- name: Asignar permisos de administrador
+  command: rabbitmqctl set_user_tags {{ rabbitmq_admin_user }} administrator
+
+

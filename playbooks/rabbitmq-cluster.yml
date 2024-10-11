@@ -1,0 +1,64 @@
+---
+- name: Configurar RabbitMQ Cluster
+  hosts: rabbitmq
+  become: yes
+  vars:
+    rabbitmq_admin_user: admin
+    rabbitmq_admin_password: StrongPassword
+    master_node: mq-01
+  roles:
+    - common
+    - erlang
+    - rabbitmq
+
+- name: Copiar cookie RabbitMQ del nodo maestro a nodos secundarios
+  hosts: rabbitmq:!master
+  become: yes
+  tasks:
+    - name: Eliminar cookie existente en nodos secundarios
+      file:
+        path: /var/lib/rabbitmq/.erlang.cookie
+        state: absent  # Asegura que el archivo no existe
+
+    - name: Leer el contenido de la cookie del nodo maestro
+      slurp:
+        src: /var/lib/rabbitmq/.erlang.cookie
+      register: erlang_cookie_content
+      delegate_to: "{{ groups['master'][0] }}"  # Leer desde el nodo maestro
+
+    - name: Crear el archivo de cookie en el nodo secundario
+      copy:
+        content: "{{ erlang_cookie_content['content'] | b64decode }}"  # Decodificar contenido
+        dest: /var/lib/rabbitmq/.erlang.cookie
+        mode: '0400'
+        owner: rabbitmq
+        group: rabbitmq
+
+    - name: Reiniciar RabbitMQ en el nodo secundario
+      systemd:
+        name: rabbitmq-server
+        state: restarted
+
+
+- name: Configurar clúster en nodos secundarios
+  hosts: rabbitmq:!master
+  become: yes
+  tasks:
+    - name: Detener la aplicación RabbitMQ
+      ansible.builtin.command: rabbitmqctl stop_app
+
+    - name: Resetear el nodo RabbitMQ
+      ansible.builtin.command: rabbitmqctl reset
+
+    - name: Unir nodo al clúster
+      ansible.builtin.command: rabbitmqctl join_cluster rabbit@{{ groups['master'][0] }}
+
+    - name: Iniciar la aplicación RabbitMQ
+      ansible.builtin.command: rabbitmqctl start_app
+
+- name: Configurar política HA en el maestro
+  hosts: master
+  become: yes
+  tasks:
+    - name: Establecer política HA
+      ansible.builtin.command: rabbitmqctl set_policy ha-all ".*" '{"ha-mode":"all"}'

@@ -1,0 +1,7 @@
+[rabbitmq]
+rabbitmq-01 ansible_host=192.168.26.81
+rabbitmq-02 ansible_host=192.168.26.82
+rabbitmq-03 ansible_host=192.168.26.83
+
+[master]
+rabbitmq-01 ansible_host=192.168.26.81
